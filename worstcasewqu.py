@@ -1,5 +1,5 @@
-/** This code draws the tree of given height with the least amount of
-    unions achievable through the weighted quick-union algorithm. **/
+""" This code draws the tree of given height with the least amount of
+    unions achievable through the weighted quick-union algorithm. """
 
 from tkinter import *
 
