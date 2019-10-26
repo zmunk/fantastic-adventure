@@ -4,13 +4,17 @@ from PyQt5.QtWidgets import (QApplication, QCalendarWidget, QCheckBox,
         QComboBox, QDateEdit, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
         QLayout, QWidget, QVBoxLayout, QPushButton, QLabel)
 import random
+import logging as log
+
+# log.basicConfig(level=log.DEBUG)
+log.debug("DEBUGGING")
 
 FPS = 60
 CANVAS_WIDTH, CANVAS_HEIGHT = 400, 300
 PADDING = 20
 SPACE_TO_BAR_RATIO = 0.5
 SWAP_FRAMES = 10
-IDLE_FRAMES = 3
+IDLE_FRAMES = 5
 DEFAULT_COLOR = Qt.blue
 
 
@@ -88,6 +92,34 @@ class Sorter:
             actions.append(Action("swap", i, min_ind))
             actions.append(Action("color", i, "grey"))
             actions.append(Action("color", min_ind, "default"))
+        actions.append(Action("color", len(inp_list) - 1, "grey"))
+        return actions
+
+    def insertionSort(inp_list):
+        actions = []
+        for i in range(0, len(inp_list)):
+            actions.append(Action("color", i, "yellow"))
+            last_pos = None
+            performed_swap = False
+            for j in range(i, 0, -1):
+                if inp_list[j] < inp_list[j - 1]:
+
+                    if not performed_swap:
+                        actions.append(Action("color", j - 1, "orange"))
+
+                    actions.append(Action("color", j, "green"))
+                    # swap j - 1 and j
+                    inp_list[j - 1], inp_list[j] = inp_list[j], inp_list[j - 1]
+                    actions.append(Action("swap", j, j - 1))
+
+                    if not performed_swap:
+                        actions.insert(-4, Action("color", j, "default"))
+                        performed_swap = True
+
+                    last_pos = j - 1
+            if last_pos is not None:
+                actions.append(Action("color", last_pos, "default"))
+            actions.append(Action("color", i, "default"))
         return actions
 
 class Canvas(QLabel):
@@ -108,8 +140,8 @@ class Canvas(QLabel):
         p.drawPolygon(*qpts)
 
 class Action(object):
-    def __init__(self, action_name, item1, item2):
-        self.name = action_name # "color yellow", compare, swap, scan
+    def __init__(self, action_name, item1=None, item2=None):
+        self.name = action_name # "color", "swap"
         self.item1 = item1
         self.item2 = item2
 
@@ -153,7 +185,7 @@ class ActionTracker(object):
         self.actions = self.createActions(array)
 
     def createActions(self, array):
-        return Sorter.selectionSort(array)
+        return Sorter.insertionSort(array)
 
     def getNextAction(self):
         try:
@@ -231,8 +263,9 @@ class SortVisualizer(object):
                 # change color of bar to specified color
                 index = self.curr_action.item1
                 color = self.curr_action.item2
-                print("index: {}, color: {}".format(index, color))
+                log.debug("index: {}, color: {}".format(index, color))
                 self.bars[index].changeColor(color)
+
         elif state == "next frame": # do next frame of swap
             if not self.swapper.nextFrame():
                 # end of swap
@@ -246,7 +279,7 @@ class SortVisualizer(object):
             bar.draw(self.canvas)
 
     def buttonPressed(self):
-        print("button pressed")
+        log.debug("button pressed")
         self.state_tracker.startAnimation()
 
 
